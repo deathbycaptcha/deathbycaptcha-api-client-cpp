@@ -56,6 +56,7 @@ jobs:
         id: coverage
         run: |
           gcovr --root . --filter 'src/' --exclude 'tests/' --exclude '_deps/' \
+            --gcov-executable gcov-14 \
             build/cov --print-summary > coverage-summary.txt
           pct=$(awk '/lines:/{print $2}' coverage-summary.txt | tr -d '%')
           if [[ -z "$pct" ]]; then
@@ -77,6 +78,7 @@ jobs:
 
           mkdir -p pages
           gcovr --root . --filter 'src/' --exclude 'tests/' --exclude '_deps/' \
+            --gcov-executable gcov-14 \
             --html pages/coverage.html --html-details build/cov || true
 
           printf '{"schemaVersion":1,"label":"coverage","message":"%s%%","color":"%s"}\n' \
