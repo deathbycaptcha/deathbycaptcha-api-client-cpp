@@ -284,7 +284,8 @@ std::string HttpClient::http_call(
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_cb);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, API_VERSION.data());
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0L); // handle 303 manually
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);   // follow 303 → GET automatically
+    curl_easy_setopt(curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL ^ CURL_REDIR_POST_303); // 303 → GET
 
     // Accept header
     struct curl_slist* headers = nullptr;
@@ -340,26 +341,6 @@ std::string HttpClient::http_call(
 
     long http_code = 0;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-
-    // Follow 303 manually: re-issue GET to Location header
-    if (http_code == 303) {
-        char* loc_raw = nullptr;
-        curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &loc_raw);
-        if (loc_raw) {
-            response_body.clear();
-            curl_easy_reset(curl);
-            curl_easy_setopt(curl, CURLOPT_URL, loc_raw);
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_cb);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
-            curl_easy_setopt(curl, CURLOPT_USERAGENT, API_VERSION.data());
-            struct curl_slist* h2 = nullptr;
-            h2 = curl_slist_append(h2, "Accept: application/json");
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, h2);
-            curl_easy_perform(curl);
-            curl_slist_free_all(h2);
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-        }
-    }
 
     if (http_code == 403) {
         throw AccessDeniedException(
