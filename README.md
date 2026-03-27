@@ -15,7 +15,7 @@
 
 ## 📖 Introduction
 
-The [DeathByCaptcha](https://deathbycaptcha.com) C++ client is the official library for the DeathByCaptcha **captcha solving service**. It provides a clean, well-documented C++20 interface for integrating CAPTCHA solving into automation workflows — a common requirement when you use it as a **captcha solver for web scraping**, where CAPTCHAs block access to target pages. It supports both the HTTPS API (encrypted transport — recommended when security is a priority) and the socket-based API (faster and lower latency, recommended for high-throughput production workloads).
+The [DeathByCaptcha](https://deathbycaptcha.com) C++ client is the official library for the DeathByCaptcha captcha solving service, built for developers and teams that need reliable automation in production. It provides a clean, well-documented C++20 interface for integrating CAPTCHA solving into bots, data extraction jobs, and browser workflows, including use cases where a captcha solver for web scraping is required to keep pipelines stable when target sites enforce CAPTCHA challenges. It supports both the HTTPS API (encrypted transport — recommended when security is a priority) and the socket-based API (faster and lower latency, recommended for high-throughput production workloads).
 
 Key features:
 
