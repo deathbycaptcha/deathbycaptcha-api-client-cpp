@@ -1,0 +1,62 @@
+name: Publish (vcpkg / Conan port)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish C++ package port info
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME:-v1.0.0}"
+          VERSION="${TAG#v}"
+          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Release version: ${VERSION}" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify version in CMakeLists.txt
+        run: |
+          CMAKE_VERSION=$(grep -m1 'project.*VERSION' CMakeLists.txt \
+            | grep -oP '\d+\.\d+\.\d+')
+          TAG_VERSION="${{ steps.version.outputs.VERSION }}"
+          if [ "$CMAKE_VERSION" != "$TAG_VERSION" ]; then
+            echo "ERROR: CMakeLists.txt version ($CMAKE_VERSION) != tag ($TAG_VERSION)" >&2
+            exit 1
+          fi
+          echo "Version match: $CMAKE_VERSION" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Build release package
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y cmake ninja-build libcurl4-openssl-dev \
+            nlohmann-json3-dev gcc-14 g++-14
+          cmake --preset release
+          cmake --build --preset release
+
+      - name: Create GitHub Release archive
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          git archive --format=tar.gz \
+            --prefix="deathbycaptcha-api-client-cpp-${VERSION}/" \
+            HEAD > "deathbycaptcha-api-client-cpp-${VERSION}.tar.gz"
+          sha256sum "deathbycaptcha-api-client-cpp-${VERSION}.tar.gz" \
+            > "deathbycaptcha-api-client-cpp-${VERSION}.tar.gz.sha256"
+          echo "Archive ready: deathbycaptcha-api-client-cpp-${VERSION}.tar.gz" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.version.outputs.VERSION }}
+          path: |
+            deathbycaptcha-api-client-cpp-*.tar.gz
+            deathbycaptcha-api-client-cpp-*.sha256

@@ -1,0 +1,98 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default (Debug, shared)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":           "Debug",
+        "DBC_BUILD_SHARED":           "ON",
+        "DBC_BUILD_STATIC":           "ON",
+        "DBC_BUILD_TESTS":            "ON",
+        "DBC_BUILD_INTEGRATION_TESTS":"OFF",
+        "DBC_BUILD_EXAMPLES":         "OFF",
+        "DBC_ENABLE_COVERAGE":        "OFF"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":           "Release",
+        "DBC_BUILD_SHARED":           "ON",
+        "DBC_BUILD_STATIC":           "ON",
+        "DBC_BUILD_TESTS":            "OFF",
+        "DBC_BUILD_EXAMPLES":         "OFF",
+        "DBC_ENABLE_COVERAGE":        "OFF"
+      }
+    },
+    {
+      "name": "coverage",
+      "displayName": "Coverage (Debug + gcov)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/cov",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":           "Debug",
+        "DBC_BUILD_SHARED":           "OFF",
+        "DBC_BUILD_STATIC":           "ON",
+        "DBC_BUILD_TESTS":            "ON",
+        "DBC_BUILD_INTEGRATION_TESTS":"OFF",
+        "DBC_BUILD_EXAMPLES":         "OFF",
+        "DBC_ENABLE_COVERAGE":        "ON"
+      }
+    },
+    {
+      "name": "integration",
+      "displayName": "Integration tests (live API)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/integration",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":           "Debug",
+        "DBC_BUILD_SHARED":           "OFF",
+        "DBC_BUILD_STATIC":           "ON",
+        "DBC_BUILD_TESTS":            "OFF",
+        "DBC_BUILD_INTEGRATION_TESTS":"ON",
+        "DBC_BUILD_EXAMPLES":         "OFF",
+        "DBC_ENABLE_COVERAGE":        "OFF"
+      }
+    },
+    {
+      "name": "examples",
+      "displayName": "Examples",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/examples",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE":           "Release",
+        "DBC_BUILD_SHARED":           "ON",
+        "DBC_BUILD_STATIC":           "OFF",
+        "DBC_BUILD_TESTS":            "OFF",
+        "DBC_BUILD_INTEGRATION_TESTS":"OFF",
+        "DBC_BUILD_EXAMPLES":         "ON",
+        "DBC_ENABLE_COVERAGE":        "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "default",     "configurePreset": "default"     },
+    { "name": "release",     "configurePreset": "release"     },
+    { "name": "coverage",    "configurePreset": "coverage"    },
+    { "name": "integration", "configurePreset": "integration" },
+    { "name": "examples",    "configurePreset": "examples"    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "output": { "verbosity": "verbose" }
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage",
+      "output": { "verbosity": "verbose" }
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+# Build directories (all CMake presets)
+build/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+DartConfiguration.tcl
+install_manifest.txt
+
+# Ninja / Make artifacts
+*.ninja
+*.ninja_deps
+*.ninja_log
+Makefile
+
+# Compiled output
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+
+# Object files
+*.o
+*.obj
+
+# Coverage artifacts
+*.gcno
+*.gcda
+*.gcov
+htmlcov/
+coverage.xml
+pages/
+
+# CTest / CDash
+Testing/
+LastTest.log
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Dependency fetched by FetchContent (if ever used offline)
+_deps/

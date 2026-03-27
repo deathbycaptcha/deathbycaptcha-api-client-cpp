@@ -1,0 +1,106 @@
+name: Coverage
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  coverage:
+    name: Coverage C++20 (gcov)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build libcurl4-openssl-dev nlohmann-json3-dev \
+            gcc-14 g++-14 gcovr
+
+      - name: Cache CMake coverage build
+        uses: actions/cache@v4
+        with:
+          path: build/cov
+          key: ${{ runner.os }}-coverage-cmake-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-coverage-cmake-
+
+      - name: Show versions
+        run: |
+          cmake --version
+          gcovr --version
+
+      - name: Configure (coverage preset)
+        env:
+          CC:  gcc-14
+          CXX: g++-14
+        run: cmake --preset coverage
+
+      - name: Build
+        run: cmake --build --preset coverage
+
+      - name: Run unit tests
+        run: |
+          cd build/cov
+          ctest --output-on-failure
+
+      - name: Collect coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p pages
+          gcovr \
+            --root . \
+            --filter 'src/' \
+            --exclude 'tests/' \
+            --exclude '_deps/' \
+            --html pages/coverage.html \
+            --html-details \
+            --txt \
+            --txt-metric line \
+            -j 4 \
+            --object-directory build/cov \
+            2>&1 | tee coverage-output.txt || true
+
+          LINES_PCT=$(grep -E '^TOTAL' coverage-output.txt | awk '{print $NF}' | tr -d '%' || echo "0")
+          if [ -z "$LINES_PCT" ] || [ "$LINES_PCT" = "0" ]; then
+            LINES_PCT=$(gcovr --root . --filter 'src/' --exclude 'tests/' \
+              --exclude '_deps/' --object-directory build/cov \
+              --json-summary /dev/stdout 2>/dev/null \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); print(int(d.get('line_percent',0)))" || echo "0")
+          fi
+
+          COLOR="red"
+          awk "BEGIN {exit !($LINES_PCT >= 85)}" && COLOR="brightgreen" || true
+          awk "BEGIN {exit !($LINES_PCT >= 70 && $LINES_PCT < 85)}" && COLOR="yellow" || true
+
+          cat > pages/coverage-badge.json <<EOF
+          {"schemaVersion":1,"label":"coverage","message":"${LINES_PCT}%","color":"${COLOR}"}
+          EOF
+
+          echo "### Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Lines coverage:** ${LINES_PCT}%" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          cat coverage-output.txt >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

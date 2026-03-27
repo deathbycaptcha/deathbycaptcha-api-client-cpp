@@ -1,0 +1,56 @@
+name: API Integration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  api_integration:
+    name: API basic integration (C++20)
+    runs-on: ubuntu-24.04
+    env:
+      DBC_USERNAME: ${{ secrets.DBC_USERNAME }}
+      DBC_PASSWORD: ${{ secrets.DBC_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build libcurl4-openssl-dev nlohmann-json3-dev \
+            gcc-14 g++-14
+
+      - name: Cache CMake integration build
+        uses: actions/cache@v4
+        with:
+          path: build/integration
+          key: ${{ runner.os }}-integration-cmake-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-integration-cmake-
+
+      - name: Show versions
+        run: cmake --version
+
+      - name: Configure (integration preset)
+        env:
+          CC:  gcc-14
+          CXX: g++-14
+        run: cmake --preset integration
+
+      - name: Build
+        run: cmake --build --preset integration
+
+      - name: Skip integration test when secrets are missing
+        if: ${{ env.DBC_USERNAME == '' || env.DBC_PASSWORD == '' }}
+        run: |
+          echo "DBC_USERNAME and/or DBC_PASSWORD secrets are not configured. Skipping API integration test." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Run API integration test
+        if: ${{ env.DBC_USERNAME != '' && env.DBC_PASSWORD != '' }}
+        run: |
+          cd build/integration
+          ctest --output-on-failure
