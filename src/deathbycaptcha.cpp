@@ -640,7 +640,8 @@ Captcha SocketClient::upload(const std::filesystem::path& file, Params params) {
 Captcha SocketClient::upload(std::span<const std::uint8_t> data, Params params) {
     ensure_logged_in();
     if (!data.empty()) {
-        params["captcha"] = "base64:" + base64_encode(
+        // Socket API expects plain base64 payload (no "base64:" prefix).
+        params["captcha"] = base64_encode(
             std::vector<std::uint8_t>(data.begin(), data.end()));
     }
     Params p = socket_call("upload", std::move(params));

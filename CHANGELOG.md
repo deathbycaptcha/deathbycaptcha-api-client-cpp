@@ -5,10 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-03-27
+## [4.7.0] - 2026-03-27
 
 ### Added
-- Initial C++20 implementation of the DeathByCaptcha API client library.
+- Initial public release of this repository, aligned with the 4.7.x client family.
+- Official C++20 DeathByCaptcha API client repository and project layout.
 - `dbc::HttpClient` — HTTPS REST client using libcurl.
 - `dbc::SocketClient` — TCP socket client (cleartext, faster responses).
 - Abstract `dbc::Client` base class with shared polling logic.

@@ -49,7 +49,7 @@ namespace dbc {
 
 // ─── Library constants ────────────────────────────────────────────────────────
 
-inline constexpr std::string_view API_VERSION           = "DBC/CPP v1.0.0";
+inline constexpr std::string_view API_VERSION           = "DBC/CPP v4.7.0";
 inline constexpr std::string_view HTTP_BASE_URL         = "https://api.dbcapi.me/api";
 inline constexpr std::string_view SOCKET_HOST           = "api.dbcapi.me";
 inline constexpr int              DEFAULT_TIMEOUT        = 60;

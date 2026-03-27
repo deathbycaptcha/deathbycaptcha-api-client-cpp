@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(deathbycaptcha-cpp VERSION 1.0.0 LANGUAGES CXX)
+project(deathbycaptcha-cpp VERSION 4.7.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(FetchContent)
+include(CMakePackageConfigHelpers)
 
 # ── Options ─────────────────────────────────────────────────────────────────
 option(DBC_BUILD_SHARED           "Build the shared library"                    ON)
@@ -65,7 +66,7 @@ set(DBC_PUBLIC_HEADERS
 # ── Helper to apply common settings ───────────────────────────────────────────
 function(dbc_configure_target target_name)
     target_link_libraries(${target_name}
-        PRIVATE dbc_cpp_warnings ${DBC_PLATFORM_LIBS})
+        PRIVATE "$<BUILD_INTERFACE:dbc_cpp_warnings>" ${DBC_PLATFORM_LIBS})
     target_include_directories(${target_name}
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -151,3 +152,26 @@ if(DBC_BUILD_STATIC)
         EXPORT DeathByCaptchaCppTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
+
+# ── CMake package config ───────────────────────────────────────────────────────
+set(DBC_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/DeathByCaptchaCpp")
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/DeathByCaptchaCppConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion)
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/DeathByCaptchaCppConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/DeathByCaptchaCppConfig.cmake"
+    INSTALL_DESTINATION "${DBC_INSTALL_CMAKEDIR}")
+
+install(EXPORT DeathByCaptchaCppTargets
+    FILE      DeathByCaptchaCppTargets.cmake
+    NAMESPACE DeathByCaptcha::
+    DESTINATION "${DBC_INSTALL_CMAKEDIR}")
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/DeathByCaptchaCppConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/DeathByCaptchaCppConfigVersion.cmake"
+    DESTINATION "${DBC_INSTALL_CMAKEDIR}")

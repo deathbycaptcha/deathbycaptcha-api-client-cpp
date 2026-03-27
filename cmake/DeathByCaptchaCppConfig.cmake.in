@@ -1,0 +1,19 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+find_dependency(CURL)
+find_dependency(nlohmann_json 3.11)
+
+include("${CMAKE_CURRENT_LIST_DIR}/DeathByCaptchaCppTargets.cmake")
+
+# Convenience alias DeathByCaptcha::cpp — prefers static, falls back to shared.
+if(NOT TARGET DeathByCaptcha::cpp)
+    if(TARGET DeathByCaptcha::deathbycaptcha_cpp_static)
+        add_library(DeathByCaptcha::cpp ALIAS DeathByCaptcha::deathbycaptcha_cpp_static)
+    elseif(TARGET DeathByCaptcha::deathbycaptcha_cpp_shared)
+        add_library(DeathByCaptcha::cpp ALIAS DeathByCaptcha::deathbycaptcha_cpp_shared)
+    endif()
+endif()
+
+check_required_components(DeathByCaptchaCpp)
