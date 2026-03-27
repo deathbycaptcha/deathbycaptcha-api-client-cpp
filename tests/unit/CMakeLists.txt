@@ -53,3 +53,21 @@ target_include_directories(test_coverage_boost PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src)
 add_test(NAME coverage_boost COMMAND test_coverage_boost)
+
+# ── test_http_transport ────────────────────────────────────────────────────────
+add_executable(test_http_transport test_http_transport.cpp)
+target_link_libraries(test_http_transport PRIVATE ${DBC_TEST_LIB}
+    GTest::gtest_main GTest::gmock)
+target_include_directories(test_http_transport PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME http_transport COMMAND test_http_transport)
+
+# ── test_socket_transport ──────────────────────────────────────────────────────
+add_executable(test_socket_transport test_socket_transport.cpp)
+target_link_libraries(test_socket_transport PRIVATE ${DBC_TEST_LIB}
+    GTest::gtest_main GTest::gmock)
+target_include_directories(test_socket_transport PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME socket_transport COMMAND test_socket_transport)

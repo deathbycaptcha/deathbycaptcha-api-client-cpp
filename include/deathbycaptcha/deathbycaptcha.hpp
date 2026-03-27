@@ -239,6 +239,9 @@ protected:
         const std::vector<std::pair<std::string,
                                     std::vector<std::uint8_t>>>& files = {});
 
+    /// Base URL used by http_call (overridable in tests to target a local server).
+    std::string m_http_base_url{std::string(HTTP_BASE_URL)};
+
 private:
     std::unique_ptr<detail::HttpClientImpl> m_impl;
 
@@ -286,6 +289,9 @@ protected:
      * @return JSON response as key→value string map.
      */
     virtual Params socket_call(std::string_view command, Params data = {});
+
+    /// Redirect socket connections to a given host:port (for in-process test servers).
+    void set_test_socket_endpoint(std::string host, int port);
 
 private:
     std::unique_ptr<detail::SocketClientImpl> m_impl;

@@ -276,7 +276,7 @@ std::string HttpClient::http_call(
     CURL* curl = m_impl->curl;
     std::string response_body;
 
-    std::string url = std::string(HTTP_BASE_URL);
+    std::string url = m_http_base_url;
     if (!endpoint.empty()) url += '/' + std::string(endpoint);
 
     curl_easy_reset(curl);
@@ -451,6 +451,8 @@ struct SocketClientImpl {
     dbc_socket_t sock{INVALID_SOCKET};
     std::mutex   mtx;
     bool         logged_in{false};
+    std::string  m_host{std::string(SOCKET_HOST)};
+    int          m_forced_port{0};
 
 #if defined(_WIN32) || defined(__CYGWIN__)
     SocketClientImpl() {
@@ -480,13 +482,13 @@ struct SocketClientImpl {
 
     bool connect_to_host() {
         close();
-        const int port = random_socket_port();
+        const int port = (m_forced_port != 0) ? m_forced_port : random_socket_port();
         struct addrinfo hints{}, *res = nullptr;
         hints.ai_family   = AF_INET;
         hints.ai_socktype = SOCK_STREAM;
         const std::string port_str = std::to_string(port);
 
-        if (::getaddrinfo(SOCKET_HOST.data(), port_str.c_str(),
+        if (::getaddrinfo(m_host.c_str(), port_str.c_str(),
                           &hints, &res) != 0) return false;
 
         sock = ::socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -548,6 +550,11 @@ SocketClient::~SocketClient() = default;
 void SocketClient::close() {
     std::lock_guard lock(m_impl->mtx);
     m_impl->close();
+}
+
+void SocketClient::set_test_socket_endpoint(std::string host, int port) {
+    m_impl->m_host        = std::move(host);
+    m_impl->m_forced_port = port;
 }
 
 // ── Socket call (virtual, overridable in tests) ───────────────────────────────

@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <fstream>
 #include <cstdio>
+#include <cstring>
+#include <unistd.h>
 #include "deathbycaptcha/deathbycaptcha.hpp"
 
 using namespace dbc;
@@ -177,3 +179,84 @@ TEST(CoverageBoost, ParamsSupportsAllTypeFields) {
     p["textcaptcha"]           = "What is 2+2?";
     EXPECT_EQ(p.size(), 16u);
 }
+
+// ─── read_file_bytes error paths ──────────────────────────────────────────────
+
+TEST(CoverageBoost, ReadFileBytesThrowsForNonExistentFile) {
+    MinimalHttpMock c("u", "p");
+    c.is_verbose = false;
+    EXPECT_THROW(
+        c.upload(std::filesystem::path("/tmp/dbc_nonexistent_file_xyz_abc")),
+        std::runtime_error);
+}
+
+TEST(CoverageBoost, ReadFileBytesThrowsForEmptyFile) {
+    char tmp[] = "/tmp/dbc_empty_XXXXXX";
+    int fd = mkstemp(tmp);   // creates an empty file
+    ::close(fd);
+
+    MinimalHttpMock c("u", "p");
+    c.is_verbose = false;
+    EXPECT_THROW(
+        c.upload(std::filesystem::path(tmp)),
+        std::runtime_error);
+    ::unlink(tmp);
+}
+
+// ─── json_to_params: number, boolean and array/object (else) branches ─────────
+// MinimalHttpMock overrides http_call() but NOT parse_response() nor
+// json_to_params(), so these branches are exercised when parse_response is
+// called with a JSON body that contains numbers, booleans and arrays.
+
+TEST(CoverageBoost, JsonToParamsNumberAndBoolBranches) {
+    MinimalHttpMock c("u", "p");
+    c.is_verbose = false;
+    // "user" is a JSON number, "is_banned" is a JSON boolean
+    c.set_response(R"({"user":10,"rate":0.2,"balance":3.0,"is_banned":false})");
+    User u = c.get_user();
+    EXPECT_EQ(u.user, 10LL);
+    EXPECT_FALSE(u.is_banned);
+}
+
+TEST(CoverageBoost, JsonToParamsArrayElseBranch) {
+    MinimalHttpMock c("u", "p");
+    c.is_verbose = false;
+    // "tags" is a JSON array → hits the else branch (v.dump())
+    // user_from_params ignores unknown keys so get_user still works
+    c.set_response(
+        R"({"user":1,"rate":0.1,"balance":5.0,"is_banned":false,"tags":["a","b"]})");
+    User u = c.get_user();
+    EXPECT_EQ(u.user, 1LL);
+}
+
+TEST(CoverageBoost, JsonToParamsNestedObjectElseBranch) {
+    MinimalHttpMock c("u", "p");
+    c.is_verbose = false;
+    // "meta" is a JSON object → hits the else branch
+    c.set_response(
+        R"({"user":2,"rate":0.1,"balance":1.0,"is_banned":false,"meta":{"k":"v"}})");
+    User u = c.get_user();
+    EXPECT_EQ(u.user, 2LL);
+}
+
+// ─── captcha_from_params: text field populated ────────────────────────────────
+
+TEST(CoverageBoost, CaptchaFromParamsTextFieldCovered) {
+    MinimalHttpMock c("u", "p");
+    c.is_verbose = false;
+    c.set_response(R"({"captcha":55,"text":"some_token","is_correct":true})");
+    auto t = c.get_text(55);
+    ASSERT_TRUE(t.has_value());
+    EXPECT_EQ(*t, "some_token");
+}
+
+// ─── HttpClient with authtoken: get_auth() authtoken branch ───────────────────
+
+TEST(CoverageBoost, GetAuthAuthtokenBranchCovered) {
+    MinimalHttpMock c("my_authtoken");
+    c.is_verbose = false;
+    c.set_response(R"({"user":5,"rate":0.139,"balance":10.0,"is_banned":false})");
+    User u = c.get_user();
+    EXPECT_EQ(u.user, 5LL);
+}
+
