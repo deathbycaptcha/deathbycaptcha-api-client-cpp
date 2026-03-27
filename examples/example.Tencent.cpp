@@ -11,7 +11,7 @@ int main() {
     const std::string tencent_params = R"({
         "proxy":     "http://user:password@127.0.0.1:1234",
         "proxytype": "HTTP",
-        "app_id":    "your_tencent_app_id_here",
+        "appid":     "your_tencent_appid_here",
         "pageurl":   "https://example.com/with-tencent-captcha"
     })";
 

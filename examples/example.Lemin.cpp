@@ -9,11 +9,10 @@ int main() {
     dbc::HttpClient client(username, password);
 
     const std::string lemin_params = R"({
-        "proxy":       "http://user:password@127.0.0.1:1234",
-        "proxytype":   "HTTP",
-        "captcha_id":  "your_lemin_captcha_id_here",
-        "pageurl":     "https://example.com/with-lemin",
-        "api_server":  "https://api.leminnow.com"
+        "proxy":     "http://user:password@127.0.0.1:1234",
+        "proxytype": "HTTP",
+        "captchaid": "CROPPED_099216d_8ba061383fa24ef498115023aa7189d4",
+        "pageurl":   "https://dashboard.leminnow.com/auth/signup"
     })";
 
     try {

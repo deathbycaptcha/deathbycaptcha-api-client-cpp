@@ -9,11 +9,11 @@ int main() {
     dbc::HttpClient client(username, password);
 
     const std::string atb_params = R"({
-        "proxy":     "http://user:password@127.0.0.1:1234",
-        "proxytype": "HTTP",
-        "pageurl":   "https://your-atb-protected-page.example.com",
-        "api_server": "your_atb_api_server_here",
-        "app_id":    "your_app_id_here"
+        "proxy":      "http://user:password@127.0.0.1:1234",
+        "proxytype":  "HTTP",
+        "pageurl":    "https://your-atb-protected-page.example.com",
+        "apiserver":  "https://cap.aisecurius.com",
+        "appid":      "af23e041b22d000a11e22a230fa8991c"
     })";
 
     try {

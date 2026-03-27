@@ -9,10 +9,11 @@ int main() {
     dbc::HttpClient client(username, password);
 
     const std::string capy_params = R"({
-        "proxy":     "http://user:password@127.0.0.1:1234",
-        "proxytype": "HTTP",
-        "sitekey":   "your_capy_sitekey_here",
-        "pageurl":   "https://www.capy.me/products/captcha/"
+        "proxy":      "http://user:password@127.0.0.1:1234",
+        "proxytype":  "HTTP",
+        "captchakey": "PUZZLE_h4k2THJgd5dR5jYrKRHdddaSEp7aDN",
+        "api_server": "https://www.capy.me/",
+        "pageurl":    "https://www.capy.me/products/puzzle_captcha/"
     })";
 
     try {

@@ -9,11 +9,11 @@ int main() {
     dbc::HttpClient client(username, password);
 
     const std::string cutcaptcha_params = R"({
-        "proxy":        "http://user:password@127.0.0.1:1234",
-        "proxytype":    "HTTP",
-        "misery_key":   "your_misery_key_here",
-        "api_key":      "your_api_key_here",
-        "pageurl":      "https://example.com/with-cutcaptcha"
+        "proxy":      "http://user:password@127.0.0.1:1234",
+        "proxytype":  "HTTP",
+        "miserykey":  "56a9e9b989aa8cf99e0cea28d4b4678b84fa7a4e",
+        "apikey":     "SAs61IAI",
+        "pageurl":    "https://filecrypt.cc/Contact.html"
     })";
 
     try {
