@@ -2,21 +2,24 @@ name: Coverage
 
 on:
   push:
-  pull_request:
+    branches:
+      - master
+      - main
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   coverage:
-    name: Coverage C++20 (gcov)
+    name: Build, test and generate coverage badge
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout
@@ -37,11 +40,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-coverage-cmake-
 
-      - name: Show versions
-        run: |
-          cmake --version
-          gcovr --version
-
       - name: Configure (coverage preset)
         env:
           CC:  gcc-14
@@ -52,55 +50,57 @@ jobs:
         run: cmake --build --preset coverage
 
       - name: Run unit tests
-        run: |
-          cd build/cov
-          ctest --output-on-failure
+        run: ctest --test-dir build/cov --output-on-failure
 
-      - name: Collect coverage
-        shell: bash
+      - name: Generate coverage percentage
+        id: coverage
         run: |
-          set -euo pipefail
-          mkdir -p pages
-          gcovr \
-            --root . \
-            --filter 'src/' \
-            --exclude 'tests/' \
-            --exclude '_deps/' \
-            --html pages/coverage.html \
-            --html-details \
-            --txt \
-            --txt-metric line \
-            -j 4 \
-            --object-directory build/cov \
-            2>&1 | tee coverage-output.txt || true
+          gcovr --root . --filter 'src/' --exclude 'tests/' --exclude '_deps/' \
+            build/cov --print-summary > coverage-summary.txt
+          pct=$(awk '/lines:/{print $2}' coverage-summary.txt | tr -d '%')
+          if [[ -z "$pct" ]]; then
+            echo "Failed to extract coverage percentage"
+            cat coverage-summary.txt
+            exit 1
+          fi
+          echo "value=${pct}" >> "$GITHUB_OUTPUT"
+          cat coverage-summary.txt
 
-          LINES_PCT=$(grep -E '^TOTAL' coverage-output.txt | awk '{print $NF}' | tr -d '%' || echo "0")
-          if [ -z "$LINES_PCT" ] || [ "$LINES_PCT" = "0" ]; then
-            LINES_PCT=$(gcovr --root . --filter 'src/' --exclude 'tests/' \
-              --exclude '_deps/' --object-directory build/cov \
-              --json-summary /dev/stdout 2>/dev/null \
-              | python3 -c "import sys,json; d=json.load(sys.stdin); print(int(d.get('line_percent',0)))" || echo "0")
+      - name: Generate coverage badge JSON (shields.io endpoint schema v1)
+        run: |
+          pct='${{ steps.coverage.outputs.value }}'
+          val=${pct%%.*}
+          color="red"
+          if (( val >= 85 )); then color="brightgreen";
+          elif (( val >= 70 )); then color="yellow";
           fi
 
-          COLOR="red"
-          awk "BEGIN {exit !($LINES_PCT >= 85)}" && COLOR="brightgreen" || true
-          awk "BEGIN {exit !($LINES_PCT >= 70 && $LINES_PCT < 85)}" && COLOR="yellow" || true
+          mkdir -p pages
+          gcovr --root . --filter 'src/' --exclude 'tests/' --exclude '_deps/' \
+            --html pages/coverage.html --html-details build/cov || true
 
-          cat > pages/coverage-badge.json <<EOF
-          {"schemaVersion":1,"label":"coverage","message":"${LINES_PCT}%","color":"${COLOR}"}
-          EOF
+          printf '{"schemaVersion":1,"label":"coverage","message":"%s%%","color":"%s"}\n' \
+            "${pct}" "${color}" > pages/coverage-badge.json
+          cat pages/coverage-badge.json
 
           echo "### Coverage Report" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Lines coverage:** ${LINES_PCT}%" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          cat coverage-output.txt >> "$GITHUB_STEP_SUMMARY" || true
+          echo "**Lines coverage:** ${pct}%" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload GitHub Pages artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: pages/
 
+  deploy:
+    name: Deploy coverage badge to GitHub Pages
+    needs: coverage
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
