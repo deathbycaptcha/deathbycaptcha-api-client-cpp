@@ -30,6 +30,7 @@ if(NOT nlohmann_json_FOUND)
         nlohmann_json
         URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
         URL_HASH SHA256=d6c65aca6b1ed68e7a182f4757257b107ae403032760ed6ef121c9d55e81757d
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
@@ -50,7 +51,7 @@ endif()
 
 # ── Platform libs ─────────────────────────────────────────────────────────────
 find_package(Threads REQUIRED)
-set(DBC_PLATFORM_LIBS Threads::Threads CURL::libcurl nlohmann_json::nlohmann_json)
+set(DBC_PLATFORM_LIBS Threads::Threads CURL::libcurl)
 if(WIN32)
     list(APPEND DBC_PLATFORM_LIBS ws2_32)
 endif()
@@ -66,7 +67,10 @@ set(DBC_PUBLIC_HEADERS
 # ── Helper to apply common settings ───────────────────────────────────────────
 function(dbc_configure_target target_name)
     target_link_libraries(${target_name}
-        PRIVATE "$<BUILD_INTERFACE:dbc_cpp_warnings>" ${DBC_PLATFORM_LIBS})
+        PRIVATE
+            "$<BUILD_INTERFACE:dbc_cpp_warnings>"
+            "$<BUILD_INTERFACE:nlohmann_json::nlohmann_json>"
+            ${DBC_PLATFORM_LIBS})
     target_include_directories(${target_name}
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -114,6 +118,7 @@ if(DBC_BUILD_TESTS OR DBC_BUILD_INTEGRATION_TESTS)
             googletest
             URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
             URL_HASH SHA256=8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         )
         set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
         set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
