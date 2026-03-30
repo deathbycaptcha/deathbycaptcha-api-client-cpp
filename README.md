@@ -197,6 +197,8 @@ export DBC_THREADS=2
 
 If `DBC_IMAGE_PATH` is set, workers use `decode()` with that image path.
 
+---
+
 <a id="available-methods"></a>
 
 | Method | Signature | Returns | Description |
