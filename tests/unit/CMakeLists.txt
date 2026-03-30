@@ -71,3 +71,12 @@ target_include_directories(test_socket_transport PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src)
 add_test(NAME socket_transport COMMAND test_socket_transport)
+
+# ── test_thread_safe_usage ────────────────────────────────────────────────────
+add_executable(test_thread_safe_usage test_thread_safe_usage.cpp)
+target_link_libraries(test_thread_safe_usage PRIVATE ${DBC_TEST_LIB}
+    GTest::gtest_main)
+target_include_directories(test_thread_safe_usage PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME thread_safe_usage COMMAND test_thread_safe_usage)

@@ -61,6 +61,7 @@ int main() {
     - [Build from source](#build-from-source)
 - [How to Use DBC API Clients](#how-to-use-dbc-api-clients)
     - [Common Clients' Interface](#common-clients-interface)
+    - [Thread-Safe Parallel Usage](#thread-safe-parallel-usage)
     - [Available Methods](#available-methods)
 - [Credentials & Configuration](#credentials--configuration)
     - [Quick Setup](#quick-setup)
@@ -164,6 +165,37 @@ dbc::HttpClient client(username, password);
 | Socket | `dbc::SocketClient` | Plain TCP — faster and lower latency, recommended for high-throughput production workloads |
 
 Both clients share the same interface. Below is a summary of every available method.
+
+<a id="thread-safe-parallel-usage"></a>
+### 🧵 Thread-Safe Parallel Usage
+
+Recommended pattern for parallel solving: **one client instance per thread**.
+
+- Do not share a single client instance between workers if your goal is maximum throughput.
+- Create one `dbc::HttpClient` or `dbc::SocketClient` per worker thread.
+- Each worker can independently call `decode()`, `upload()`, and `get_captcha()`.
+
+Ready-to-run samples:
+
+- HTTP (one instance per thread): [`examples/example.ThreadSafe_Http.cpp`](examples/example.ThreadSafe_Http.cpp)
+- Socket (one instance per thread): [`examples/example.ThreadSafe_Socket.cpp`](examples/example.ThreadSafe_Socket.cpp)
+
+Build and run:
+
+```bash
+cmake --preset examples
+cmake --build --preset examples
+
+# Basic mode (no DBC_IMAGE_PATH): each thread does get_balance()
+export DBC_USERNAME="your_username"
+export DBC_PASSWORD="your_password"
+export DBC_THREADS=2
+
+./build/examples/examples/ex_threadsafe_http
+./build/examples/examples/ex_threadsafe_socket
+```
+
+If `DBC_IMAGE_PATH` is set, workers use `decode()` with that image path.
 
 <a id="available-methods"></a>
 
